@@ -42,8 +42,7 @@ int main()
 
 	while(1)
 	{
-		AT_ConnectTCP(interface, "host", 123);
-
+		AT_SendPayload(interface, "lol whatup");
 	}
 
 }

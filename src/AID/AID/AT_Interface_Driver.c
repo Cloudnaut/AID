@@ -72,34 +72,44 @@ enum Result AT_TestInterfaceConnection(struct AT_Interface interface)
 	return Error;
 }
 
-void AT_EnableEcho(struct AT_Interface interface)
+enum Result AT_EnableEcho(struct AT_Interface interface)
 {
 	interface.sendCommandCallback(AT_ECHO_REQUEST_ENABLE, sizeof(AT_ECHO_REQUEST_ENABLE) - 1);
+
+	return Success; //TODO: Do it right
 }
 
-void AT_DisableEcho(struct AT_Interface interface)
+enum Result AT_DisableEcho(struct AT_Interface interface)
 {
 	interface.sendCommandCallback(AT_ECHO_REQUEST_DISABLE, sizeof(AT_ECHO_REQUEST_DISABLE) - 1);
+
+	return Success; //TODO: Do it right
 }
 
-void AT_Restart(struct AT_Interface interface)
+enum Result AT_Restart(struct AT_Interface interface)
 {
 	interface.sendCommandCallback(AT_RESTART_REQUEST, sizeof(AT_RESTART_REQUEST) - 1);
+
+	return Success; //TODO: Do it right
 }
 
-void AT_EnableAutoConnect(struct AT_Interface interface)
+enum Result AT_EnableAutoConnect(struct AT_Interface interface)
 {
 	interface.sendCommandCallback(AT_AUTO_CONNECT_ENABLE_REQUEST, sizeof(AT_AUTO_CONNECT_ENABLE_REQUEST) - 1);
 	AT_Restart(interface);
+
+	return Success; //TODO: Do it right
 }
 
-void AT_DisableAutoConnect(struct AT_Interface interface)
+enum Result AT_DisableAutoConnect(struct AT_Interface interface)
 {
 	interface.sendCommandCallback(AT_AUTO_CONNECT_DISABLE_REQUEST, sizeof(AT_AUTO_CONNECT_DISABLE_REQUEST) - 1);
 	AT_Restart(interface);
+
+	return Success; //TODO: Do it right
 }
 
-void AT_ConnectWifi(struct AT_Interface interface, uint8_t* ssid, uint8_t* passwd)
+enum Result AT_ConnectWifi(struct AT_Interface interface, uint8_t* ssid, uint8_t* passwd)
 {
 	ClearBuffer(interface);
 	size_t ssidLength = strlen(ssid);
@@ -126,14 +136,18 @@ void AT_ConnectWifi(struct AT_Interface interface, uint8_t* ssid, uint8_t* passw
 	cursor += 3;
 
 	interface.sendCommandCallback(interface.buffer, cursor - interface.buffer);
+
+	return Success; //TODO: Do it right
 }
 
-void AT_DisableMultiConnection(struct AT_Interface interface)
+enum Result AT_DisableMultiConnection(struct AT_Interface interface)
 {
 	interface.sendCommandCallback(AT_MULTI_REQUEST_DISABLE, sizeof(AT_MULTI_REQUEST_DISABLE) - 1);
+
+	return Success; //TODO: Do it right
 }
 
-void AT_ConnectTCP(struct AT_Interface interface, uint8_t* host, uint16_t port)
+enum Result AT_ConnectTCP(struct AT_Interface interface, uint8_t* host, uint16_t port)
 {
 	AT_DisableMultiConnection(interface);
 	ClearBuffer(interface);
@@ -163,11 +177,15 @@ void AT_ConnectTCP(struct AT_Interface interface, uint8_t* host, uint16_t port)
 	cursor += 2;
 
 	interface.sendCommandCallback(interface.buffer, cursor - interface.buffer);
+
+	return Success; //TODO: Do it right
 }
 
-void AT_CloseTCP(struct AT_Interface interface)
+enum Result AT_CloseTCP(struct AT_Interface interface)
 {
 	interface.sendCommandCallback(AT_IP_CLOSE_REQUEST, sizeof(AT_IP_CLOSE_REQUEST) - 1);
+
+	return Success; //TODO: Do it right
 }
 
 enum Result AT_SendPayload(struct AT_Interface interface, uint8_t* payload)
