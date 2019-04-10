@@ -42,7 +42,15 @@ int main()
 
 	while(1)
 	{
-		AT_ConnectTCP(interface, "nice.host.de", 1337);
+		while(!AT_ConnectWifi(interface, "premium ssid", "epic password")) {}
+		while (!AT_ConnectTCP(interface, "lol.kek.de", 232)) {}
+
+		while (!AT_SendPayload(interface, "kekerino ist lolerino")) {}
+
+		while (!AT_CloseTCP(interface)) {}
+
+		getchar();
+		getchar();
 	}
 
 }
