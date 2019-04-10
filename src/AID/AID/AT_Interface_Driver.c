@@ -5,6 +5,7 @@
 
 #pragma warning(disable:4996)
 
+#define AT_MAX_PARAMETERS_LENGTH 255
 #define AT_OK "OK"
 #define AT_TEST_REQUEST "AT"
 #define AT_ECHO_REQUEST_ENABLE "ATE1"
@@ -76,12 +77,21 @@ enum Result SendExecuteCommand(struct AT_Interface interface, uint8_t *cmd, uint
 	return Error;
 }
 
-enum Result SendQueryCommand()
+enum Result SendSetCommand(struct AT_Interface interface, uint8_t *cmd, uint8_t *params, uint8_t *expectedResult)
 {
+	ClearBuffer(interface);
+	uint32_t requestLength = sprintf(interface.buffer, "%s=%s%s", cmd, params, AT_EOF);
+	interface.sendCommandCallback(interface.buffer, requestLength);
+
+	ClearBuffer(interface);
+	interface.receiveCommandCallback(interface.buffer, interface.bufferSize);
+
+	if (IsString(interface.buffer, expectedResult))
+		return Success;
 	return Error;
 }
 
-enum Result SendSetCommand()
+enum Result SendQueryCommand()
 {
 	return Error;
 }
@@ -123,12 +133,9 @@ enum Result AT_DisableAutoConnect(struct AT_Interface interface)
 
 enum Result AT_ConnectWifi(struct AT_Interface interface, uint8_t* ssid, uint8_t* passwd)
 {
-	ClearBuffer(interface);
-	uint32_t requestLength = sprintf(interface.buffer, "%s=\"%s\",\"%s\"%s", AT_WIFI_CONNECT_REQUEST, ssid, passwd, AT_EOF);
-
-	interface.sendCommandCallback(interface.buffer, requestLength);
-
-	return Success; //TODO: Do it right
+	char parameters[AT_MAX_PARAMETERS_LENGTH];
+	sprintf(parameters, "\"%s\",\"%s\"", ssid, passwd);
+	return SendSetCommand(interface, AT_WIFI_CONNECT_REQUEST, parameters, AT_OK);
 }
 
 enum Result AT_DisableMultiConnection(struct AT_Interface interface)
