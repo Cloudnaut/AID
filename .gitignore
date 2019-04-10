@@ -3,3 +3,8 @@
 ################################################################################
 
 /.vs
+/src/AID/.vs/AID/v15
+/src/AID/Release
+/src/AID/Debug
+/src/AID/AID/Release
+/src/AID/AID/Debug
