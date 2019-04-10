@@ -42,7 +42,7 @@ int main()
 
 	while(1)
 	{
-		AT_SendPayload(interface, "lol whatup");
+		AT_ConnectTCP(interface, "nice.host.de", 1337);
 	}
 
 }

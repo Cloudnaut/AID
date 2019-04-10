@@ -1,6 +1,7 @@
 #include "AT_Interface_Driver.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #pragma warning(disable:4996)
 
@@ -112,30 +113,9 @@ enum Result AT_DisableAutoConnect(struct AT_Interface interface)
 enum Result AT_ConnectWifi(struct AT_Interface interface, uint8_t* ssid, uint8_t* passwd)
 {
 	ClearBuffer(interface);
-	size_t ssidLength = strlen(ssid);
-	size_t passwdLength = strlen(passwd);
+	uint32_t requestLength = sprintf(interface.buffer, "%s=\"%s\",\"%s\"%s", AT_WIFI_CONNECT_REQUEST, ssid, passwd, AT_EOF);
 
-	uint8_t *cursor = interface.buffer;
-
-	memcpy(cursor, AT_WIFI_CONNECT_REQUEST, sizeof(AT_WIFI_CONNECT_REQUEST) - 1);
-	cursor += sizeof(AT_WIFI_CONNECT_REQUEST) - 1;
-
-	memcpy(cursor, "=\"", 2);
-	cursor += 2;
-
-	memcpy(cursor, ssid, ssidLength);
-	cursor += ssidLength;
-
-	memcpy(cursor, "\",\"", 3);
-	cursor += 3;
-
-	memcpy(cursor, passwd, passwdLength);
-	cursor += passwdLength;
-
-	memcpy(cursor, "\"\r\n", 3);
-	cursor += 3;
-
-	interface.sendCommandCallback(interface.buffer, cursor - interface.buffer);
+	interface.sendCommandCallback(interface.buffer, requestLength);
 
 	return Success; //TODO: Do it right
 }
@@ -150,33 +130,11 @@ enum Result AT_DisableMultiConnection(struct AT_Interface interface)
 enum Result AT_ConnectTCP(struct AT_Interface interface, uint8_t* host, uint16_t port)
 {
 	AT_DisableMultiConnection(interface);
+	
 	ClearBuffer(interface);
+	uint32_t requestLength = sprintf(interface.buffer, "%s=\"TCP\",\"%s\",%u%s", AT_IP_CONNECT_REQUEST, host, port, AT_EOF);
 
-	size_t hostLength = strlen(host);
-
-	uint8_t *cursor = interface.buffer;
-
-	memcpy(cursor, AT_IP_CONNECT_REQUEST, sizeof(AT_IP_CONNECT_REQUEST) - 1);
-	cursor += sizeof(AT_IP_CONNECT_REQUEST) - 1;
-
-	memcpy(cursor, "=\"TCP\",\"", 8);
-	cursor += 8;
-
-	memcpy(cursor, host, hostLength);
-	cursor += hostLength;
-
-	memcpy(cursor, "\",", 2);
-	cursor += 2;
-
-	uint8_t portString[5];
-	itoa(port, portString, 10);
-	memcpy(cursor, portString, strlen(portString));
-	cursor += strlen(portString);
-
-	memcpy(cursor, "\r\n", 2);
-	cursor += 2;
-
-	interface.sendCommandCallback(interface.buffer, cursor - interface.buffer);
+	interface.sendCommandCallback(interface.buffer, requestLength);
 
 	return Success; //TODO: Do it right
 }
