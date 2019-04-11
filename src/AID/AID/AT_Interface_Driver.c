@@ -7,19 +7,22 @@
 
 #define AT_MAX_PARAMETERS_LENGTH 255
 
-#define AT_OK "OK"
-#define AT_TEST_REQUEST "AT"
-#define AT_ECHO_REQUEST_ENABLE "ATE1"
-#define AT_ECHO_REQUEST_DISABLE "ATE0"
-#define AT_WIFI_CONNECT_REQUEST "AT+CWJAP"
-#define AT_AUTO_CONNECT_REQUEST "AT+CWMODE"
-#define AT_RESTART_REQUEST "AT+RST"
-#define AT_MULTI_REQUEST "AT+CIPMUX"
-#define AT_IP_CONNECT_REQUEST "AT+CIPSTART"
-#define AT_IP_CLOSE_REQUEST "AT+CIPCLOSE"
-#define AT_INIT_SEND_REQUEST "AT+CIPSEND"
-#define AT_INIT_SEND_RESPONSE_SUCCESS ">"
-#define AT_SEND_SUCCESS "SEND OK"
+#define AT_MSG_OK "OK"
+#define AT_MSG_SEND_OK "SEND OK"
+#define AT_MSG_INIT_SEND_OK ">"
+
+#define AT_CMD_TEST "AT"
+#define AT_CMD_ECHO_ENABLE "ATE1"
+#define AT_CMD_ECHO_DISABLE "ATE0"
+#define AT_CMD_WIFI_CONNECT "AT+CWJAP"
+#define AT_CMD_AUTO_CONNECT "AT+CWMODE"
+#define AT_CMD_RESTART "AT+RST"
+#define AT_CMD_MULTI "AT+CIPMUX"
+#define AT_CMD_IP_CONNECT "AT+CIPSTART"
+#define AT_CMD_IP_CLOSE "AT+CIPCLOSE"
+#define AT_CMD_INIT_SEND "AT+CIPSEND"
+
+
 
 
 inline void ClearBuffer(struct AT_Interface interface)
@@ -102,44 +105,44 @@ enum Result SendTestCommand()
 
 enum Result AT_TestInterfaceConnection(struct AT_Interface interface)
 {
-	return SendExecuteCommand(interface, AT_TEST_REQUEST, AT_OK);
+	return SendExecuteCommand(interface, AT_CMD_TEST, AT_MSG_OK);
 }
 
 enum Result AT_EnableEcho(struct AT_Interface interface)
 {
-	return SendExecuteCommand(interface, AT_ECHO_REQUEST_ENABLE, AT_OK);
+	return SendExecuteCommand(interface, AT_CMD_ECHO_ENABLE, AT_MSG_OK);
 }
 
 enum Result AT_DisableEcho(struct AT_Interface interface)
 {
-	return SendExecuteCommand(interface, AT_ECHO_REQUEST_DISABLE, AT_OK);
+	return SendExecuteCommand(interface, AT_CMD_ECHO_DISABLE, AT_MSG_OK);
 }
 
 enum Result AT_Restart(struct AT_Interface interface)
 {
-	return SendExecuteCommand(interface, AT_RESTART_REQUEST, AT_OK);
+	return SendExecuteCommand(interface, AT_CMD_RESTART, AT_MSG_OK);
 }
 
 enum Result AT_EnableAutoConnect(struct AT_Interface interface)
 {
-	return SendSetCommand(interface, AT_AUTO_CONNECT_REQUEST, "1", AT_OK);
+	return SendSetCommand(interface, AT_CMD_AUTO_CONNECT, "1", AT_MSG_OK);
 }
 
 enum Result AT_DisableAutoConnect(struct AT_Interface interface)
 {
-	return SendSetCommand(interface, AT_AUTO_CONNECT_REQUEST, "0", AT_OK);
+	return SendSetCommand(interface, AT_CMD_AUTO_CONNECT, "0", AT_MSG_OK);
 }
 
 enum Result AT_ConnectWifi(struct AT_Interface interface, uint8_t* ssid, uint8_t* passwd)
 {
 	char parameters[AT_MAX_PARAMETERS_LENGTH];
 	sprintf(parameters, "\"%s\",\"%s\"", ssid, passwd);
-	return SendSetCommand(interface, AT_WIFI_CONNECT_REQUEST, parameters, AT_OK);
+	return SendSetCommand(interface, AT_CMD_WIFI_CONNECT, parameters, AT_MSG_OK);
 }
 
 enum Result AT_DisableMultiConnection(struct AT_Interface interface)
 {
-	return SendSetCommand(interface, AT_MULTI_REQUEST, "0", AT_OK);
+	return SendSetCommand(interface, AT_CMD_MULTI, "0", AT_MSG_OK);
 }
 
 enum Result AT_ConnectTCP(struct AT_Interface interface, uint8_t* host, uint16_t port)
@@ -147,7 +150,7 @@ enum Result AT_ConnectTCP(struct AT_Interface interface, uint8_t* host, uint16_t
 	AT_DisableMultiConnection(interface);
 	
 	ClearBuffer(interface);
-	uint32_t requestLength = sprintf(interface.buffer, "%s=\"TCP\",\"%s\",%u%s", AT_IP_CONNECT_REQUEST, host, port, AT_EOF);
+	uint32_t requestLength = sprintf(interface.buffer, "%s=\"TCP\",\"%s\",%u%s", AT_CMD_IP_CONNECT, host, port, AT_EOF);
 
 	interface.sendCommandCallback(interface.buffer, requestLength);
 
@@ -156,7 +159,7 @@ enum Result AT_ConnectTCP(struct AT_Interface interface, uint8_t* host, uint16_t
 
 enum Result AT_CloseTCP(struct AT_Interface interface)
 {
-	return SendSetCommand(interface, AT_IP_CLOSE_REQUEST, "0", AT_OK);
+	return SendSetCommand(interface, AT_CMD_IP_CLOSE, "0", AT_MSG_OK);
 }
 
 enum Result AT_SendPayload(struct AT_Interface interface, uint8_t* payload)
@@ -167,8 +170,8 @@ enum Result AT_SendPayload(struct AT_Interface interface, uint8_t* payload)
 
 	uint8_t *cursor = interface.buffer;
 
-	memcpy(cursor, AT_INIT_SEND_REQUEST, sizeof(AT_INIT_SEND_REQUEST) - 1);
-	cursor += sizeof(AT_INIT_SEND_REQUEST) - 1;
+	memcpy(cursor, AT_CMD_INIT_SEND, sizeof(AT_CMD_INIT_SEND) - 1);
+	cursor += sizeof(AT_CMD_INIT_SEND) - 1;
 
 	memcpy(cursor, "=", 1);
 	cursor += 1;
@@ -186,7 +189,7 @@ enum Result AT_SendPayload(struct AT_Interface interface, uint8_t* payload)
 	ClearBuffer(interface);
 	interface.receiveCommandCallback(interface.buffer, interface.bufferSize);
 
-	if(IsString(interface.buffer, AT_INIT_SEND_RESPONSE_SUCCESS))
+	if(IsString(interface.buffer, AT_MSG_INIT_SEND_OK))
 	{
 		ClearBuffer(interface);
 		interface.sendCommandCallback(payload, payloadLength);
@@ -194,7 +197,7 @@ enum Result AT_SendPayload(struct AT_Interface interface, uint8_t* payload)
 		ClearBuffer(interface);
 		interface.receiveCommandCallback(interface.buffer, interface.bufferSize);
 
-		if (StringEndsWith(interface.buffer, AT_SEND_SUCCESS))
+		if (StringEndsWith(interface.buffer, AT_MSG_SEND_OK))
 			return Success;
 	}
 
