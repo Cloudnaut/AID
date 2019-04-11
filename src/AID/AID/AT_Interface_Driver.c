@@ -11,8 +11,7 @@
 #define AT_ECHO_REQUEST_ENABLE "ATE1"
 #define AT_ECHO_REQUEST_DISABLE "ATE0"
 #define AT_WIFI_CONNECT_REQUEST "AT+CWJAP"
-#define AT_AUTO_CONNECT_ENABLE_REQUEST "AT+CWMODE=1"
-#define AT_AUTO_CONNECT_DISABLE_REQUEST "AT+CWMODE=0"
+#define AT_AUTO_CONNECT_REQUEST "AT+CWMODE"
 #define AT_RESTART_REQUEST "AT+RST"
 #define AT_MULTI_REQUEST_ENABLE "AT+CIPMUX=1"
 #define AT_MULTI_REQUEST_DISABLE "AT+CIPMUX=0"
@@ -123,12 +122,14 @@ enum Result AT_Restart(struct AT_Interface interface)
 
 enum Result AT_EnableAutoConnect(struct AT_Interface interface)
 {
-	return SendExecuteCommand(interface, AT_AUTO_CONNECT_ENABLE_REQUEST, AT_OK);
+	//return SendExecuteCommand(interface, AT_AUTO_CONNECT_ENABLE_REQUEST, AT_OK);
+	return SendSetCommand(interface, AT_AUTO_CONNECT_REQUEST, "1", AT_OK);
 }
 
 enum Result AT_DisableAutoConnect(struct AT_Interface interface)
 {
-	return SendExecuteCommand(interface, AT_AUTO_CONNECT_DISABLE_REQUEST, AT_OK);
+	//return SendExecuteCommand(interface, AT_AUTO_CONNECT_DISABLE_REQUEST, AT_OK);
+	return SendSetCommand(interface, AT_AUTO_CONNECT_REQUEST, "0", AT_OK);
 }
 
 enum Result AT_ConnectWifi(struct AT_Interface interface, uint8_t* ssid, uint8_t* passwd)
