@@ -135,7 +135,7 @@ enum Result AT_DisableAutoConnect(struct AT_Interface interface)
 
 enum Result AT_ConnectWifi(struct AT_Interface interface, uint8_t* ssid, uint8_t* passwd)
 {
-	char parameters[AT_MAX_PARAMETERS_LENGTH];
+	uint8_t parameters[AT_MAX_PARAMETERS_LENGTH];
 	sprintf(parameters, "\"%s\",\"%s\"", ssid, passwd);
 	return SendSetCommand(interface, AT_CMD_WIFI_CONNECT, parameters, AT_MSG_OK);
 }
@@ -149,12 +149,9 @@ enum Result AT_ConnectTCP(struct AT_Interface interface, uint8_t* host, uint16_t
 {
 	AT_DisableMultiConnection(interface);
 	
-	ClearBuffer(interface);
-	uint32_t requestLength = sprintf(interface.buffer, "%s=\"TCP\",\"%s\",%u%s", AT_CMD_IP_CONNECT, host, port, AT_EOF);
-
-	interface.sendCommandCallback(interface.buffer, requestLength);
-
-	return Success; //TODO: Do it right
+	uint8_t parameters[AT_MAX_PARAMETERS_LENGTH];
+	sprintf(parameters, "\"TCP\",\"%s\",%u", host, port);
+	return SendSetCommand(interface, AT_CMD_IP_CONNECT, parameters, AT_MSG_OK);
 }
 
 enum Result AT_CloseTCP(struct AT_Interface interface)
@@ -164,44 +161,24 @@ enum Result AT_CloseTCP(struct AT_Interface interface)
 
 enum Result AT_SendPayload(struct AT_Interface interface, uint8_t* payload)
 {
-	ClearBuffer(interface);
-
 	size_t payloadLength = strlen(payload);
 
-	uint8_t *cursor = interface.buffer;
+	uint8_t parameters[AT_MAX_PARAMETERS_LENGTH];
+	sprintf(parameters, "%u", payloadLength);
+	
+	if (!SendSetCommand(interface, AT_CMD_INIT_SEND, parameters, AT_MSG_INIT_SEND_OK))
+		return Error;
 
-	memcpy(cursor, AT_CMD_INIT_SEND, sizeof(AT_CMD_INIT_SEND) - 1);
-	cursor += sizeof(AT_CMD_INIT_SEND) - 1;
-
-	memcpy(cursor, "=", 1);
-	cursor += 1;
-
-	uint8_t payloadLengthString[5];
-	itoa(payloadLength, payloadLengthString, 10);
-	memcpy(cursor, payloadLengthString, strlen(payloadLengthString));
-	cursor += strlen(payloadLengthString);
-
-	memcpy(cursor, "\r\n", 2);
-	cursor += 2;
-
-	interface.sendCommandCallback(interface.buffer, cursor - interface.buffer);
+	ClearBuffer(interface);
+	interface.sendCommandCallback(payload, payloadLength);
 
 	ClearBuffer(interface);
 	interface.receiveCommandCallback(interface.buffer, interface.bufferSize);
 
-	if(IsString(interface.buffer, AT_MSG_INIT_SEND_OK))
-	{
-		ClearBuffer(interface);
-		interface.sendCommandCallback(payload, payloadLength);
+	if (!StringEndsWith(interface.buffer, AT_MSG_SEND_OK))
+		return Error;
 
-		ClearBuffer(interface);
-		interface.receiveCommandCallback(interface.buffer, interface.bufferSize);
-
-		if (StringEndsWith(interface.buffer, AT_MSG_SEND_OK))
-			return Success;
-	}
-
-	return Error;
+	return Success;
 }
 
 enum Result AT_ReceivePayload(struct AT_Interface interface, uint8_t* payload)
