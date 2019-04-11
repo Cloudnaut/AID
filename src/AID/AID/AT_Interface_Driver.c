@@ -6,6 +6,7 @@
 #pragma warning(disable:4996)
 
 #define AT_MAX_PARAMETERS_LENGTH 255
+
 #define AT_OK "OK"
 #define AT_TEST_REQUEST "AT"
 #define AT_ECHO_REQUEST_ENABLE "ATE1"
@@ -13,10 +14,9 @@
 #define AT_WIFI_CONNECT_REQUEST "AT+CWJAP"
 #define AT_AUTO_CONNECT_REQUEST "AT+CWMODE"
 #define AT_RESTART_REQUEST "AT+RST"
-#define AT_MULTI_REQUEST_ENABLE "AT+CIPMUX=1"
-#define AT_MULTI_REQUEST_DISABLE "AT+CIPMUX=0"
+#define AT_MULTI_REQUEST "AT+CIPMUX"
 #define AT_IP_CONNECT_REQUEST "AT+CIPSTART"
-#define AT_IP_CLOSE_REQUEST "AT+CIPCLOSE=0"
+#define AT_IP_CLOSE_REQUEST "AT+CIPCLOSE"
 #define AT_INIT_SEND_REQUEST "AT+CIPSEND"
 #define AT_INIT_SEND_RESPONSE_SUCCESS ">"
 #define AT_SEND_SUCCESS "SEND OK"
@@ -122,13 +122,11 @@ enum Result AT_Restart(struct AT_Interface interface)
 
 enum Result AT_EnableAutoConnect(struct AT_Interface interface)
 {
-	//return SendExecuteCommand(interface, AT_AUTO_CONNECT_ENABLE_REQUEST, AT_OK);
 	return SendSetCommand(interface, AT_AUTO_CONNECT_REQUEST, "1", AT_OK);
 }
 
 enum Result AT_DisableAutoConnect(struct AT_Interface interface)
 {
-	//return SendExecuteCommand(interface, AT_AUTO_CONNECT_DISABLE_REQUEST, AT_OK);
 	return SendSetCommand(interface, AT_AUTO_CONNECT_REQUEST, "0", AT_OK);
 }
 
@@ -141,7 +139,7 @@ enum Result AT_ConnectWifi(struct AT_Interface interface, uint8_t* ssid, uint8_t
 
 enum Result AT_DisableMultiConnection(struct AT_Interface interface)
 {
-	return SendExecuteCommand(interface, AT_MULTI_REQUEST_DISABLE, AT_OK);
+	return SendSetCommand(interface, AT_MULTI_REQUEST, "0", AT_OK);
 }
 
 enum Result AT_ConnectTCP(struct AT_Interface interface, uint8_t* host, uint16_t port)
@@ -158,7 +156,7 @@ enum Result AT_ConnectTCP(struct AT_Interface interface, uint8_t* host, uint16_t
 
 enum Result AT_CloseTCP(struct AT_Interface interface)
 {
-	return SendExecuteCommand(interface, AT_IP_CLOSE_REQUEST, AT_OK);
+	return SendSetCommand(interface, AT_IP_CLOSE_REQUEST, "0", AT_OK);
 }
 
 enum Result AT_SendPayload(struct AT_Interface interface, uint8_t* payload)
