@@ -7,8 +7,8 @@
 
 #define AT_MAX_PARAMETERS_LENGTH 255
 
-#define AT_MSG_OK "OK"
-#define AT_MSG_SEND_OK "SEND OK"
+#define AT_MSG_OK "OK\r\n"
+#define AT_MSG_SEND_OK "SEND OK\r\n"
 #define AT_MSG_INIT_SEND_OK ">"
 
 #define AT_CMD_TEST "AT"
@@ -105,7 +105,7 @@ enum Result SendTestCommand()
 
 enum Result AT_InitInterface(struct AT_Interface interface)
 {
-	AT_DisableEcho(interface);
+	return AT_DisableEcho(interface);
 }
 
 enum Result AT_TestInterfaceConnection(struct AT_Interface interface)

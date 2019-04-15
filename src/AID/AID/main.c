@@ -21,8 +21,14 @@ void receiveCallback(uint8_t * bytes, uint16_t size)
 	while(4 != (currentChar = getchar()))
 	{
 		if (currentChar == '\n')
+		{
+			*cursor = '\r';
+			cursor++;
+			*cursor = '\n';
+			cursor++;
 			continue;
-
+		}
+			
 		*cursor = currentChar;
 		cursor++;
 	}
