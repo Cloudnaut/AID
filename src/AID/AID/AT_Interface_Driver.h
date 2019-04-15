@@ -25,6 +25,7 @@ enum Result AT_DisableEcho(struct AT_Interface interface);
 enum Result AT_Restart(struct AT_Interface interface);
 enum Result AT_EnableAutoConnect(struct AT_Interface interface);
 enum Result AT_DisableAutoConnect(struct AT_Interface interface);
+enum Result AT_SetStationMode(struct AT_Interface interface);
 enum Result AT_ConnectWifi(struct AT_Interface interface, uint8_t *ssid, uint8_t *passwd);
 enum Result AT_DisableMultiConnection(struct AT_Interface interface);
 enum Result AT_ConnectTCP(struct AT_Interface interface, uint8_t *host, uint16_t port);

@@ -15,17 +15,15 @@
 #define AT_CMD_ECHO_ENABLE "ATE1"
 #define AT_CMD_ECHO_DISABLE "ATE0"
 #define AT_CMD_WIFI_CONNECT "AT+CWJAP_CUR"
-#define AT_CMD_AUTO_CONNECT "AT+CWMODE_CUR"
 #define AT_CMD_RESTART "AT+RST"
+#define AT_CMD_WIFI_MODE "AT+CWMODE_CUR"
 #define AT_CMD_MULTI "AT+CIPMUX"
 #define AT_CMD_IP_CONNECT "AT+CIPSTART"
 #define AT_CMD_IP_CLOSE "AT+CIPCLOSE"
 #define AT_CMD_INIT_SEND "AT+CIPSEND"
 
 
-
-
-inline void ClearBuffer(struct AT_Interface interface)
+void ClearBuffer(struct AT_Interface interface)
 {
 	memset(interface.buffer, '\0', interface.bufferSize);
 }
@@ -105,7 +103,11 @@ enum Result SendTestCommand()
 
 enum Result AT_InitInterface(struct AT_Interface interface)
 {
-	return AT_DisableEcho(interface);
+	if(!AT_DisableEcho(interface))
+		return Error;
+	if(!AT_SetStationMode(interface))
+		return Error;
+	return Success;
 }
 
 enum Result AT_TestInterfaceConnection(struct AT_Interface interface)
@@ -128,14 +130,9 @@ enum Result AT_Restart(struct AT_Interface interface)
 	return SendExecuteCommand(interface, AT_CMD_RESTART, AT_MSG_OK);
 }
 
-enum Result AT_EnableAutoConnect(struct AT_Interface interface)
+enum Result AT_SetStationMode(struct AT_Interface interface)
 {
-	return SendSetCommand(interface, AT_CMD_AUTO_CONNECT, "1", AT_MSG_OK);
-}
-
-enum Result AT_DisableAutoConnect(struct AT_Interface interface)
-{
-	return SendSetCommand(interface, AT_CMD_AUTO_CONNECT, "0", AT_MSG_OK);
+	return SendSetCommand(interface, AT_CMD_WIFI_MODE, "1", AT_MSG_OK);
 }
 
 enum Result AT_ConnectWifi(struct AT_Interface interface, uint8_t* ssid, uint8_t* passwd)

@@ -50,9 +50,6 @@ int main()
 
 	while(1)
 	{
-		while(!AT_EnableAutoConnect(interface)) {}
-		while(!AT_DisableAutoConnect(interface)) {}
-
 		while(!AT_ConnectWifi(interface, "premium ssid", "epic password")) {}
 		while (!AT_ConnectTCP(interface, "lol.kek.de", 232)) {}
 
