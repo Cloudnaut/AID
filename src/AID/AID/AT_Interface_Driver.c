@@ -14,8 +14,8 @@
 #define AT_CMD_TEST "AT"
 #define AT_CMD_ECHO_ENABLE "ATE1"
 #define AT_CMD_ECHO_DISABLE "ATE0"
-#define AT_CMD_WIFI_CONNECT "AT+CWJAP"
-#define AT_CMD_AUTO_CONNECT "AT+CWMODE"
+#define AT_CMD_WIFI_CONNECT "AT+CWJAP_CUR"
+#define AT_CMD_AUTO_CONNECT "AT+CWMODE_CUR"
 #define AT_CMD_RESTART "AT+RST"
 #define AT_CMD_MULTI "AT+CIPMUX"
 #define AT_CMD_IP_CONNECT "AT+CIPSTART"
@@ -74,7 +74,7 @@ enum Result SendExecuteCommand(struct AT_Interface interface, uint8_t *cmd, uint
 	ClearBuffer(interface);
 	interface.receiveCommandCallback(interface.buffer, interface.bufferSize);
 
-	if (IsString(interface.buffer, expectedResult))
+	if (StringEndsWith(interface.buffer, expectedResult))
 		return Success;
 	return Error;
 }
@@ -88,7 +88,7 @@ enum Result SendSetCommand(struct AT_Interface interface, uint8_t *cmd, uint8_t 
 	ClearBuffer(interface);
 	interface.receiveCommandCallback(interface.buffer, interface.bufferSize);
 
-	if (IsString(interface.buffer, expectedResult))
+	if (StringEndsWith(interface.buffer, expectedResult))
 		return Success;
 	return Error;
 }
@@ -101,6 +101,11 @@ enum Result SendQueryCommand()
 enum Result SendTestCommand()
 {
 	return Error;
+}
+
+enum Result AT_InitInterface(struct AT_Interface interface)
+{
+	AT_DisableEcho(interface);
 }
 
 enum Result AT_TestInterfaceConnection(struct AT_Interface interface)

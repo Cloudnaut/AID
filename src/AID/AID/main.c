@@ -40,6 +40,8 @@ int main()
 	uint8_t payload[2048];
 	memset(payload, '\0', sizeof(payload));
 
+	AT_InitInterface(interface);
+
 	while(1)
 	{
 		while(!AT_EnableAutoConnect(interface)) {}

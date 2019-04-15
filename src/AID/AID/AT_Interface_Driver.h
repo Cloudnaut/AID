@@ -18,6 +18,7 @@ enum Result
 	Error = 0
 };
 
+enum Result AT_InitInterface(struct AT_Interface interface);
 enum Result AT_TestInterfaceConnection(struct AT_Interface interface);
 enum Result AT_EnableEcho(struct AT_Interface interface);
 enum Result AT_DisableEcho(struct AT_Interface interface);
