@@ -10,6 +10,8 @@ struct AT_Interface
 	uint16_t bufferSize;
 	void (*sendCommandCallback)(uint8_t * buffer, uint16_t size);
 	void (*receiveCommandCallback)(uint8_t * buffer, uint16_t size);
+	void (*sleepCallback)(uint32_t milliseconds);
+	void (*logCallback) (uint8_t *log);
 };
 
 enum Result
@@ -24,8 +26,6 @@ enum Result AT_EnableEcho(struct AT_Interface interface);
 enum Result AT_DisableEcho(struct AT_Interface interface);
 enum Result AT_Restart(struct AT_Interface interface);
 enum Result AT_Restore(struct AT_Interface interface);
-enum Result AT_EnableAutoConnect(struct AT_Interface interface);
-enum Result AT_DisableAutoConnect(struct AT_Interface interface);
 enum Result AT_SetStationMode(struct AT_Interface interface);
 enum Result AT_ConnectWifi(struct AT_Interface interface, uint8_t *ssid, uint8_t *passwd);
 enum Result AT_EnableDHCP(struct AT_Interface interface);

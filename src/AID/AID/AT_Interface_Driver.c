@@ -9,7 +9,8 @@
 
 #define AT_MSG_OK "OK\r\n"
 #define AT_MSG_SEND_OK "SEND OK\r\n"
-#define AT_MSG_INIT_SEND_OK ">"
+#define AT_MSG_WIFI_CONNECTED "WIFI CONNECTED\r\n"
+#define AT_MSG_INIT_SEND_OK "> "
 
 #define AT_CMD_TEST "AT"
 #define AT_CMD_ECHO_ENABLE "ATE1"
@@ -28,6 +29,12 @@
 void ClearBuffer(struct AT_Interface interface)
 {
 	memset(interface.buffer, '\0', interface.bufferSize);
+}
+
+void Log(struct AT_Interface interface, uint8_t *log)
+{
+	if(interface.logCallback != NULL)
+		interface.logCallback(log);
 }
 
 enum Result IsString(uint8_t *a, uint8_t *b)
@@ -69,11 +76,16 @@ enum Result SendExecuteCommand(struct AT_Interface interface, uint8_t *cmd, uint
 {
 	ClearBuffer(interface);
 	uint32_t requestLength = sprintf(interface.buffer, "%s%s", cmd, AT_EOF);
+	
+	Log(interface, interface.buffer);
+	
 	interface.sendCommandCallback(interface.buffer, requestLength);
 
 	ClearBuffer(interface);
 	interface.receiveCommandCallback(interface.buffer, interface.bufferSize);
 
+	Log(interface, interface.buffer);
+	
 	if (StringEndsWith(interface.buffer, expectedResult))
 		return Success;
 	return Error;
@@ -83,11 +95,16 @@ enum Result SendSetCommand(struct AT_Interface interface, uint8_t *cmd, uint8_t 
 {
 	ClearBuffer(interface);
 	uint32_t requestLength = sprintf(interface.buffer, "%s=%s%s", cmd, params, AT_EOF);
+	
+	Log(interface, interface.buffer);
+	
 	interface.sendCommandCallback(interface.buffer, requestLength);
 
 	ClearBuffer(interface);
 	interface.receiveCommandCallback(interface.buffer, interface.bufferSize);
 
+	Log(interface, interface.buffer);
+	
 	if (StringEndsWith(interface.buffer, expectedResult))
 		return Success;
 	return Error;
@@ -112,6 +129,8 @@ enum Result AT_InitInterface(struct AT_Interface interface)
 	if (!AT_DisableEcho(interface))
 		return Error;
 	if (!AT_SetStationMode(interface))
+		return Error;
+	if (!AT_DisableMultiConnection(interface))
 		return Error;
 	return Success;
 }
@@ -138,7 +157,11 @@ enum Result AT_Restart(struct AT_Interface interface)
 
 enum Result AT_Restore(struct AT_Interface interface)
 {
-	return SendExecuteCommand(interface, AT_CMD_RESTORE, AT_MSG_OK);
+	enum Result result = SendExecuteCommand(interface, AT_CMD_RESTORE, AT_MSG_OK);
+	
+	interface.sleepCallback(2500);
+	
+	return result;
 }
 
 enum Result AT_SetStationMode(struct AT_Interface interface)
@@ -150,7 +173,7 @@ enum Result AT_ConnectWifi(struct AT_Interface interface, uint8_t* ssid, uint8_t
 {
 	uint8_t parameters[AT_MAX_PARAMETERS_LENGTH];
 	sprintf(parameters, "\"%s\",\"%s\"", ssid, passwd);
-	return SendSetCommand(interface, AT_CMD_WIFI_CONNECT, parameters, AT_MSG_OK);
+	return SendSetCommand(interface, AT_CMD_WIFI_CONNECT, parameters, AT_MSG_WIFI_CONNECTED);
 }
 
 enum Result AT_EnableDHCP(struct AT_Interface interface)
@@ -173,9 +196,7 @@ enum Result AT_DisableMultiConnection(struct AT_Interface interface)
 }
 
 enum Result AT_ConnectTCP(struct AT_Interface interface, uint8_t* host, uint16_t port)
-{
-	AT_DisableMultiConnection(interface);
-	
+{	
 	uint8_t parameters[AT_MAX_PARAMETERS_LENGTH];
 	sprintf(parameters, "\"TCP\",\"%s\",%u", host, port);
 	return SendSetCommand(interface, AT_CMD_IP_CONNECT, parameters, AT_MSG_OK);
@@ -196,11 +217,15 @@ enum Result AT_SendPayload(struct AT_Interface interface, uint8_t* payload)
 	if (!SendSetCommand(interface, AT_CMD_INIT_SEND, parameters, AT_MSG_INIT_SEND_OK))
 		return Error;
 
+	Log(interface, payload);
+	
 	ClearBuffer(interface);
 	interface.sendCommandCallback(payload, payloadLength);
 
 	ClearBuffer(interface);
 	interface.receiveCommandCallback(interface.buffer, interface.bufferSize);
+	
+	Log(interface, interface.buffer);
 
 	if (!StringEndsWith(interface.buffer, AT_MSG_SEND_OK))
 		return Error;
