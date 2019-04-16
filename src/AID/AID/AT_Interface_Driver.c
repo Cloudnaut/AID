@@ -16,7 +16,9 @@
 #define AT_CMD_ECHO_DISABLE "ATE0"
 #define AT_CMD_WIFI_CONNECT "AT+CWJAP_CUR"
 #define AT_CMD_RESTART "AT+RST"
+#define AT_CMD_RESTORE "AT+RESTORE"
 #define AT_CMD_WIFI_MODE "AT+CWMODE_CUR"
+#define AT_CMD_DHCP_MODE "AT+CWDHCP_CUR"
 #define AT_CMD_MULTI "AT+CIPMUX"
 #define AT_CMD_IP_CONNECT "AT+CIPSTART"
 #define AT_CMD_IP_CLOSE "AT+CIPCLOSE"
@@ -103,9 +105,11 @@ enum Result SendTestCommand()
 
 enum Result AT_InitInterface(struct AT_Interface interface)
 {
-	if(!AT_DisableEcho(interface))
+	if (!AT_Restore(interface))
 		return Error;
-	if(!AT_SetStationMode(interface))
+	if (!AT_DisableEcho(interface))
+		return Error;
+	if (!AT_SetStationMode(interface))
 		return Error;
 	return Success;
 }
@@ -130,6 +134,11 @@ enum Result AT_Restart(struct AT_Interface interface)
 	return SendExecuteCommand(interface, AT_CMD_RESTART, AT_MSG_OK);
 }
 
+enum Result AT_Restore(struct AT_Interface interface)
+{
+	return SendExecuteCommand(interface, AT_CMD_RESTORE, AT_MSG_OK);
+}
+
 enum Result AT_SetStationMode(struct AT_Interface interface)
 {
 	return SendSetCommand(interface, AT_CMD_WIFI_MODE, "1", AT_MSG_OK);
@@ -140,6 +149,20 @@ enum Result AT_ConnectWifi(struct AT_Interface interface, uint8_t* ssid, uint8_t
 	uint8_t parameters[AT_MAX_PARAMETERS_LENGTH];
 	sprintf(parameters, "\"%s\",\"%s\"", ssid, passwd);
 	return SendSetCommand(interface, AT_CMD_WIFI_CONNECT, parameters, AT_MSG_OK);
+}
+
+enum Result AT_EnableDHCP(struct AT_Interface interface)
+{
+	uint8_t parameters[AT_MAX_PARAMETERS_LENGTH];
+	sprintf(parameters, "%u,%u", 1, 1);
+	return SendSetCommand(interface, AT_CMD_DHCP_MODE, parameters, AT_MSG_OK);
+}
+
+enum Result AT_DisableDHCP(struct AT_Interface interface)
+{
+	uint8_t parameters[AT_MAX_PARAMETERS_LENGTH];
+	sprintf(parameters, "%u,%u", 1, 0);
+	return SendSetCommand(interface, AT_CMD_DHCP_MODE, parameters, AT_MSG_OK);
 }
 
 enum Result AT_DisableMultiConnection(struct AT_Interface interface)
