@@ -105,6 +105,8 @@ enum Result SendTestCommand()
 
 enum Result AT_InitInterface(struct AT_Interface interface)
 {
+	if (!AT_DisableEcho(interface))
+		return Error;
 	if (!AT_Restore(interface))
 		return Error;
 	if (!AT_DisableEcho(interface))
