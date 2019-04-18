@@ -9,6 +9,7 @@
 
 #define AT_MSG_OK "OK\r\n"
 #define AT_MSG_SEND_OK "SEND OK\r\n"
+#define AT_MSG_SEND_RECV "Recv "
 #define AT_MSG_WIFI_CONNECTED "WIFI CONNECTED\r\n"
 #define AT_MSG_INIT_SEND_OK "> "
 
@@ -22,6 +23,7 @@
 #define AT_CMD_DHCP_MODE "AT+CWDHCP_CUR"
 #define AT_CMD_MULTI "AT+CIPMUX"
 #define AT_CMD_IP_CONNECT "AT+CIPSTART"
+#define AT_CMD_IP_TRANS_MODE "AT+CIPMODE"
 #define AT_CMD_IP_CLOSE "AT+CIPCLOSE"
 #define AT_CMD_INIT_SEND "AT+CIPSEND"
 
@@ -195,6 +197,11 @@ enum Result AT_DisableMultiConnection(struct AT_Interface interface)
 	return SendSetCommand(interface, AT_CMD_MULTI, "0", AT_MSG_OK);
 }
 
+enum Result AT_SetTransparentTransmissionMode(struct AT_Interface interface)
+{
+	return SendSetCommand(interface, AT_CMD_IP_TRANS_MODE, "1", AT_MSG_OK);
+}
+
 enum Result AT_ConnectTCP(struct AT_Interface interface, uint8_t* host, uint16_t port)
 {	
 	uint8_t parameters[AT_MAX_PARAMETERS_LENGTH];
@@ -208,7 +215,7 @@ enum Result AT_CloseTCP(struct AT_Interface interface)
 }
 
 enum Result AT_SendPayload(struct AT_Interface interface, uint8_t* payload)
-{
+{	
 	size_t payloadLength = strlen(payload);
 
 	uint8_t parameters[AT_MAX_PARAMETERS_LENGTH];
@@ -227,9 +234,16 @@ enum Result AT_SendPayload(struct AT_Interface interface, uint8_t* payload)
 	
 	Log(interface, interface.buffer);
 
-	if (!StringEndsWith(interface.buffer, AT_MSG_SEND_OK))
+	if (!StringStartsWith(interface.buffer, AT_MSG_SEND_RECV))
 		return Error;
 
+	ClearBuffer(interface);
+	interface.receiveCommandCallback(interface.buffer, interface.bufferSize);
+	
+	Log(interface, interface.buffer);
+	if (!StringStartsWith(interface.buffer, AT_MSG_SEND_OK))
+		return Error;
+	
 	return Success;
 }
 
@@ -238,6 +252,8 @@ enum Result AT_ReceivePayload(struct AT_Interface interface, uint8_t* payload)
 	ClearBuffer(interface);
 	interface.receiveCommandCallback(interface.buffer, interface.bufferSize);
 
+	Log(interface, interface.buffer);
+	
 	if(StringStartsWith(interface.buffer, "+IPD"))
 	{
 		uint8_t *cursor = interface.buffer;

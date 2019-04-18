@@ -31,6 +31,7 @@ enum Result AT_ConnectWifi(struct AT_Interface interface, uint8_t *ssid, uint8_t
 enum Result AT_EnableDHCP(struct AT_Interface interface);
 enum Result AT_DisableDHCP(struct AT_Interface interface);
 enum Result AT_DisableMultiConnection(struct AT_Interface interface);
+enum Result AT_SetTransparentTransmissionMode(struct AT_Interface interface);
 enum Result AT_ConnectTCP(struct AT_Interface interface, uint8_t *host, uint16_t port);
 enum Result AT_CloseTCP(struct AT_Interface interface);
 enum Result AT_SendPayload(struct AT_Interface interface, uint8_t *payload);
