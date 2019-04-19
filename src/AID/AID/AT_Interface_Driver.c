@@ -5,7 +5,7 @@
 
 #pragma warning(disable:4996)
 
-#define AT_MAX_PARAMETERS_LENGTH 255
+#define AT_MAX_PARAMETERS_LENGTH 150
 
 #define AT_MSG_OK "OK\r\n"
 #define AT_MSG_SEND_OK "SEND OK\r\n"
@@ -71,6 +71,25 @@ enum Result StringStartsWith(uint8_t *string, uint8_t *start)
 		if (memcmp(string, start, startLength) == 0)
 			return Success;
 	}
+	return Error;
+}
+
+enum Result ParseForPayload(uint8_t *haystack, uint8_t *payload)
+{
+	uint8_t *cursor = haystack;
+	while(*cursor != '\0' && *cursor != '+')
+		cursor++;
+	
+	if(StringStartsWith(cursor, "+IPD"))
+	{
+		while (*cursor != ':')
+			cursor++;
+		cursor++;
+
+		strcpy(payload, cursor);
+		return Success;
+	}
+	
 	return Error;
 }
 
@@ -211,10 +230,10 @@ enum Result AT_ConnectTCP(struct AT_Interface interface, uint8_t* host, uint16_t
 
 enum Result AT_CloseTCP(struct AT_Interface interface)
 {
-	return SendSetCommand(interface, AT_CMD_IP_CLOSE, "0", AT_MSG_OK);
+	return SendExecuteCommand(interface, AT_CMD_IP_CLOSE, AT_MSG_OK);
 }
 
-enum Result AT_SendPayload(struct AT_Interface interface, uint8_t* payload)
+enum Result AT_SendPayload(struct AT_Interface interface, uint8_t* payload, uint8_t *responsePayload)
 {	
 	size_t payloadLength = strlen(payload);
 
@@ -241,8 +260,12 @@ enum Result AT_SendPayload(struct AT_Interface interface, uint8_t* payload)
 	interface.receiveCommandCallback(interface.buffer, interface.bufferSize);
 	
 	Log(interface, interface.buffer);
+	Log(interface, "\r\n");
+	
 	if (!StringStartsWith(interface.buffer, AT_MSG_SEND_OK))
 		return Error;
+	
+	ParseForPayload(interface.buffer, responsePayload);
 	
 	return Success;
 }
@@ -253,17 +276,7 @@ enum Result AT_ReceivePayload(struct AT_Interface interface, uint8_t* payload)
 	interface.receiveCommandCallback(interface.buffer, interface.bufferSize);
 
 	Log(interface, interface.buffer);
+	Log(interface, "\r\n");
 	
-	if(StringStartsWith(interface.buffer, "+IPD"))
-	{
-		uint8_t *cursor = interface.buffer;
-		while (*cursor != ':')
-			cursor++;
-		cursor++;
-
-		strcpy(payload, cursor);
-		return Success;
-	}
-
-	return Error;
+	return ParseForPayload(interface.buffer, payload);
 }

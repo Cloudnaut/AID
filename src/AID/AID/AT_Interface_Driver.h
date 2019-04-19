@@ -34,7 +34,7 @@ enum Result AT_DisableMultiConnection(struct AT_Interface interface);
 enum Result AT_SetTransparentTransmissionMode(struct AT_Interface interface);
 enum Result AT_ConnectTCP(struct AT_Interface interface, uint8_t *host, uint16_t port);
 enum Result AT_CloseTCP(struct AT_Interface interface);
-enum Result AT_SendPayload(struct AT_Interface interface, uint8_t *payload);
+enum Result AT_SendPayload(struct AT_Interface interface, uint8_t *payload, uint8_t *responsePayload);
 enum Result AT_ReceivePayload(struct AT_Interface interface, uint8_t *payload);
 
 #endif //AT_INTERFACE_DRIVER
