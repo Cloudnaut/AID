@@ -1,4 +1,4 @@
-#include "AT_Interface_Driver.h"
+#include "../../include/AT_Interface_Driver.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -45,6 +45,9 @@ int main()
 
 	uint8_t payload[2048];
 	memset(payload, '\0', sizeof(payload));
+	uint8_t responsePayload[2048];
+	memset(responsePayload, '\0', sizeof(responsePayload));
+	
 
 	AT_InitInterface(interface);
 
@@ -53,7 +56,7 @@ int main()
 		while(!AT_ConnectWifi(interface, "premium ssid", "epic password")) {}
 		while (!AT_ConnectTCP(interface, "lol.kek.de", 232)) {}
 
-		while (!AT_SendPayload(interface, "kekerino ist lolerino")) {}
+		while (!AT_SendPayload(interface, "kekerino ist lolerino", responsePayload)) {}
 
 		while (!AT_CloseTCP(interface)) {}
 

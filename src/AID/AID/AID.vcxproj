@@ -19,11 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AT_Interface_Driver.c" />
+    <ClCompile Include="..\..\include\AT_Interface_Driver.c" />
     <ClCompile Include="main.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AT_Interface_Driver.h" />
+    <ClInclude Include="..\..\include\AT_Interface_Driver.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

@@ -15,15 +15,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AT_Interface_Driver.c">
+    <ClCompile Include="main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main.c">
+    <ClCompile Include="..\..\include\AT_Interface_Driver.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AT_Interface_Driver.h">
+    <ClInclude Include="..\..\include\AT_Interface_Driver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

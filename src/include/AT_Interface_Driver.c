@@ -5,7 +5,7 @@
 
 #pragma warning(disable:4996)
 
-#define AT_MAX_PARAMETERS_LENGTH 150
+#define AT_MAX_PARAMETERS_LENGTH 255
 
 #define AT_MSG_OK "OK\r\n"
 #define AT_MSG_SEND_OK "SEND OK\r\n"
