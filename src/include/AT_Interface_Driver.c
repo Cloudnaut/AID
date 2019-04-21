@@ -93,7 +93,7 @@ enum Result ParseForPayload(uint8_t *haystack, uint8_t *payload)
 	return Error;
 }
 
-enum Result SendExecuteCommand(struct AT_Interface interface, uint8_t *cmd, uint8_t *expectedResult)
+enum Result SendExecuteCommand(struct AT_Interface interface, uint8_t *cmd, uint8_t *expectedResult, uint32_t timeout)
 {
 	ClearBuffer(interface);
 	uint32_t requestLength = sprintf(interface.buffer, "%s%s", cmd, AT_EOF);
@@ -103,7 +103,8 @@ enum Result SendExecuteCommand(struct AT_Interface interface, uint8_t *cmd, uint
 	interface.sendCommandCallback(interface.buffer, requestLength);
 
 	ClearBuffer(interface);
-	interface.receiveCommandCallback(interface.buffer, interface.bufferSize);
+	if(!interface.receiveCommandCallback(interface.buffer, interface.bufferSize, timeout))
+		return Error;
 
 	Log(interface, interface.buffer);
 	
@@ -112,7 +113,7 @@ enum Result SendExecuteCommand(struct AT_Interface interface, uint8_t *cmd, uint
 	return Error;
 }
 
-enum Result SendSetCommand(struct AT_Interface interface, uint8_t *cmd, uint8_t *params, uint8_t *expectedResult)
+enum Result SendSetCommand(struct AT_Interface interface, uint8_t *cmd, uint8_t *params, uint8_t *expectedResult, uint32_t timeout)
 {
 	ClearBuffer(interface);
 	uint32_t requestLength = sprintf(interface.buffer, "%s=%s%s", cmd, params, AT_EOF);
@@ -122,7 +123,8 @@ enum Result SendSetCommand(struct AT_Interface interface, uint8_t *cmd, uint8_t 
 	interface.sendCommandCallback(interface.buffer, requestLength);
 
 	ClearBuffer(interface);
-	interface.receiveCommandCallback(interface.buffer, interface.bufferSize);
+	if(!interface.receiveCommandCallback(interface.buffer, interface.bufferSize, timeout))
+		return Error;
 
 	Log(interface, interface.buffer);
 	
@@ -158,27 +160,27 @@ enum Result AT_InitInterface(struct AT_Interface interface)
 
 enum Result AT_TestInterfaceConnection(struct AT_Interface interface)
 {
-	return SendExecuteCommand(interface, AT_CMD_TEST, AT_MSG_OK);
+	return SendExecuteCommand(interface, AT_CMD_TEST, AT_MSG_OK, interface.defaultResponseTimeout);
 }
 
 enum Result AT_EnableEcho(struct AT_Interface interface)
 {
-	return SendExecuteCommand(interface, AT_CMD_ECHO_ENABLE, AT_MSG_OK);
+	return SendExecuteCommand(interface, AT_CMD_ECHO_ENABLE, AT_MSG_OK, interface.defaultResponseTimeout);
 }
 
 enum Result AT_DisableEcho(struct AT_Interface interface)
 {
-	return SendExecuteCommand(interface, AT_CMD_ECHO_DISABLE, AT_MSG_OK);
+	return SendExecuteCommand(interface, AT_CMD_ECHO_DISABLE, AT_MSG_OK, interface.defaultResponseTimeout);
 }
 
 enum Result AT_Restart(struct AT_Interface interface)
 {
-	return SendExecuteCommand(interface, AT_CMD_RESTART, AT_MSG_OK);
+	return SendExecuteCommand(interface, AT_CMD_RESTART, AT_MSG_OK, interface.defaultResponseTimeout);
 }
 
 enum Result AT_Restore(struct AT_Interface interface)
 {
-	enum Result result = SendExecuteCommand(interface, AT_CMD_RESTORE, AT_MSG_OK);
+	enum Result result = SendExecuteCommand(interface, AT_CMD_RESTORE, AT_MSG_OK, interface.defaultResponseTimeout);
 	
 	interface.sleepCallback(2500);
 	
@@ -187,50 +189,50 @@ enum Result AT_Restore(struct AT_Interface interface)
 
 enum Result AT_SetStationMode(struct AT_Interface interface)
 {
-	return SendSetCommand(interface, AT_CMD_WIFI_MODE, "1", AT_MSG_OK);
+	return SendSetCommand(interface, AT_CMD_WIFI_MODE, "1", AT_MSG_OK, interface.defaultResponseTimeout);
 }
 
 enum Result AT_ConnectWifi(struct AT_Interface interface, uint8_t* ssid, uint8_t* passwd)
 {
 	uint8_t parameters[AT_MAX_PARAMETERS_LENGTH];
 	sprintf(parameters, "\"%s\",\"%s\"", ssid, passwd);
-	return SendSetCommand(interface, AT_CMD_WIFI_CONNECT, parameters, AT_MSG_WIFI_CONNECTED);
+	return SendSetCommand(interface, AT_CMD_WIFI_CONNECT, parameters, AT_MSG_WIFI_CONNECTED, interface.defaultResponseTimeout);
 }
 
 enum Result AT_EnableDHCP(struct AT_Interface interface)
 {
 	uint8_t parameters[AT_MAX_PARAMETERS_LENGTH];
 	sprintf(parameters, "%u,%u", 1, 1);
-	return SendSetCommand(interface, AT_CMD_DHCP_MODE, parameters, AT_MSG_OK);
+	return SendSetCommand(interface, AT_CMD_DHCP_MODE, parameters, AT_MSG_OK, interface.defaultResponseTimeout);
 }
 
 enum Result AT_DisableDHCP(struct AT_Interface interface)
 {
 	uint8_t parameters[AT_MAX_PARAMETERS_LENGTH];
 	sprintf(parameters, "%u,%u", 1, 0);
-	return SendSetCommand(interface, AT_CMD_DHCP_MODE, parameters, AT_MSG_OK);
+	return SendSetCommand(interface, AT_CMD_DHCP_MODE, parameters, AT_MSG_OK, interface.defaultResponseTimeout);
 }
 
 enum Result AT_DisableMultiConnection(struct AT_Interface interface)
 {
-	return SendSetCommand(interface, AT_CMD_MULTI, "0", AT_MSG_OK);
+	return SendSetCommand(interface, AT_CMD_MULTI, "0", AT_MSG_OK, interface.defaultResponseTimeout);
 }
 
 enum Result AT_SetTransparentTransmissionMode(struct AT_Interface interface)
 {
-	return SendSetCommand(interface, AT_CMD_IP_TRANS_MODE, "1", AT_MSG_OK);
+	return SendSetCommand(interface, AT_CMD_IP_TRANS_MODE, "1", AT_MSG_OK, interface.defaultResponseTimeout);
 }
 
 enum Result AT_ConnectTCP(struct AT_Interface interface, uint8_t* host, uint16_t port)
 {	
 	uint8_t parameters[AT_MAX_PARAMETERS_LENGTH];
 	sprintf(parameters, "\"TCP\",\"%s\",%u", host, port);
-	return SendSetCommand(interface, AT_CMD_IP_CONNECT, parameters, AT_MSG_OK);
+	return SendSetCommand(interface, AT_CMD_IP_CONNECT, parameters, AT_MSG_OK, interface.defaultResponseTimeout);
 }
 
 enum Result AT_CloseTCP(struct AT_Interface interface)
 {
-	return SendExecuteCommand(interface, AT_CMD_IP_CLOSE, AT_MSG_OK);
+	return SendExecuteCommand(interface, AT_CMD_IP_CLOSE, AT_MSG_OK, interface.defaultResponseTimeout);
 }
 
 enum Result AT_SendPayload(struct AT_Interface interface, uint8_t* payload, uint8_t *responsePayload)
@@ -240,7 +242,7 @@ enum Result AT_SendPayload(struct AT_Interface interface, uint8_t* payload, uint
 	uint8_t parameters[AT_MAX_PARAMETERS_LENGTH];
 	sprintf(parameters, "%u", payloadLength);
 	
-	if (!SendSetCommand(interface, AT_CMD_INIT_SEND, parameters, AT_MSG_INIT_SEND_OK))
+	if (!SendSetCommand(interface, AT_CMD_INIT_SEND, parameters, AT_MSG_INIT_SEND_OK, interface.defaultResponseTimeout))
 		return Error;
 
 	Log(interface, payload);
@@ -249,7 +251,7 @@ enum Result AT_SendPayload(struct AT_Interface interface, uint8_t* payload, uint
 	interface.sendCommandCallback(payload, payloadLength);
 
 	ClearBuffer(interface);
-	interface.receiveCommandCallback(interface.buffer, interface.bufferSize);
+	interface.receiveCommandCallback(interface.buffer, interface.bufferSize, interface.defaultResponseTimeout);
 	
 	Log(interface, interface.buffer);
 
@@ -257,7 +259,7 @@ enum Result AT_SendPayload(struct AT_Interface interface, uint8_t* payload, uint
 		return Error;
 
 	ClearBuffer(interface);
-	interface.receiveCommandCallback(interface.buffer, interface.bufferSize);
+	interface.receiveCommandCallback(interface.buffer, interface.bufferSize, interface.defaultResponseTimeout);
 	
 	Log(interface, interface.buffer);
 	Log(interface, "\r\n");
@@ -270,10 +272,10 @@ enum Result AT_SendPayload(struct AT_Interface interface, uint8_t* payload, uint
 	return Success;
 }
 
-enum Result AT_ReceivePayload(struct AT_Interface interface, uint8_t* payload)
+enum Result AT_ReceivePayload(struct AT_Interface interface, uint8_t* payload, uint32_t responseTimeout)
 {
 	ClearBuffer(interface);
-	interface.receiveCommandCallback(interface.buffer, interface.bufferSize);
+	interface.receiveCommandCallback(interface.buffer, interface.bufferSize, responseTimeout);
 
 	Log(interface, interface.buffer);
 	Log(interface, "\r\n");

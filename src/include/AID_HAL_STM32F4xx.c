@@ -44,13 +44,17 @@ void sendESPCallback(uint8_t *bytes, uint16_t size) //Callback method to abstrac
 	HAL_UART_Transmit(&UART_ESP_Handle, bytes, size, HAL_MAX_DELAY);
 }
 
-void receiveESPCallback(uint8_t *response, uint16_t size) //Callback method to abstract receiving data from ESP
+enum Result receiveESPCallback(uint8_t *response, uint16_t size, uint32_t timeout) //Callback method to abstract receiving data from ESP
 {
 	uint8_t buffer[1]; //One byte buffer to read the stream byte by byte
 	uint8_t *responseCursor = response;
-	HAL_UART_Receive(&UART_ESP_Handle, buffer, sizeof(buffer), HAL_MAX_DELAY);
+	if(HAL_UART_Receive(&UART_ESP_Handle, buffer, sizeof(buffer), timeout) != HAL_OK)
+		return Error;
 	while(*buffer == '\r' || *buffer == '\n') //Skip linefeeds and linebreaks
-		HAL_UART_Receive(&UART_ESP_Handle, buffer, sizeof(buffer), HAL_MAX_DELAY);
+	{
+		if(HAL_UART_Receive(&UART_ESP_Handle, buffer, sizeof(buffer), timeout) != HAL_OK)
+			return Error;
+	}
 	while((responseCursor - response) < (size - 1)) //Read message byte by byte until newline but drop before overflow
 	{
 		*responseCursor = *buffer;
@@ -75,6 +79,7 @@ void AID_Init_STM32F4xx(struct AT_Interface *interface, uint32_t GPIO_PIN_TX, ui
 	
 	interface->buffer = buffer;
 	interface->bufferSize = bufferSize;
+	interface->defaultResponseTimeout = HAL_MAX_DELAY;
 	interface->sendCommandCallback = sendESPCallback;
 	interface->receiveCommandCallback = receiveESPCallback;
 	interface->sleepCallback = sleepCallback;
